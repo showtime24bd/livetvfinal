@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EPG Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+    }
+    .program {
+      background: #222;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid #666;
+    }
+    .program.sports {
+      border-left-color: #f59e0b;
+      background: #2a1f0a;
+    }
+    h3 {
+      margin: 0 0 10px 0;
+      color: #3b82f6;
+    }
+    button {
+      background: #f59e0b;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #d97706;
+    }
+    select {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .info {
+      background: #1a2234;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏆 EPG Test Page</h1>
+  
+  <div class="info">
+    <h3>Channels:</h3>
+    <ul id="channelsList"></ul>
+  </div>
+
+  <select id="channelSelect">
+    <option value="">Select a channel...</option>
+  </select>
+
+  <div id="results"></div>
+
+  <script>
+    const channels = [
+      {% for channel in channels %}
+      { 
+        id: {{ channel.id }}, 
+        name: "{{ channel.name }}", 
+        epgId: "{{ channel.epg_channel_id }}" 
+      }{{ "," if not loop.last else "" }}
+      {% endfor %}
+    ];
+
+    // Show channels
+    const list = document.getElementById('channelsList');
+    list.innerHTML = channels.map(c => 
+      `<li>${c.name} - EPG ID: ${c.epgId}</li>`
+    ).join('');
+
+    // Populate dropdown
+    const select = document.getElementById('channelSelect');
+    channels.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+
+    select.addEventListener('change', async function() {
+      const channelId = this.value;
+      if (!channelId) return;
+
+      document.getElementById('results').innerHTML = '<p>Loading...</p>';
+
+      try {
+        const response = await fetch(`/api/epg/${channelId}`);
+        const data = await response.json();
+
+        console.log('EPG Response:', data);
+
+        if (data.error) {
+          document.getElementById('results').innerHTML = 
+            `<div style="color:red">Error: ${data.error}</div>`;
+          return;
+        }
+
+        const programs = data.all || [];
+        console.log('Total programs:', programs.length);
+
+        // Filter sports
+        const sports = programs.filter(p => {
+          const title = (p.title || '').toLowerCase();
+          const cat = (p.category || '').toLowerCase();
+          return cat.includes('sport') ||
+                 title.includes('football') || 
+                 title.includes('cricket') ||
+                 title.includes('soccer') ||
+                 title.includes('basketball') ||
+                 title.includes('tennis') ||
+                 title.includes('hockey') ||
+                 title.includes('baseball') ||
+                 title.includes('live -') ||
+                 title.includes('match') ||
+                 title.includes('league') ||
+                 title.includes('mlb') ||
+                 title.includes('nba') ||
+                 title.includes('t20');
+        });
+
+        console.log('Sports programs:', sports.length);
+
+        if (sports.length === 0) {
+          document.getElementById('results').innerHTML = 
+            `<div class="info">
+              <p><strong>No sports found!</strong></p>
+              <p>Total programs: ${programs.length}</p>
+              <p>Showing first 10 programs:</p>
+            </div>` + 
+            programs.slice(0, 10).map(p => `
+              <div class="program">
+                <strong>${p.title}</strong><br>
+                ${p.desc || 'No description'}<br>
+                Category: ${p.category || 'None'}<br>
+                Time: ${p.start_fmt} - ${p.stop_fmt}
+              </div>
+            `).join('');
+          return;
+        }
+
+        document.getElementById('results').innerHTML = 
+          `<div class="info">
+            <p><strong>Found ${sports.length} sports programs!</strong></p>
+            <p>Total programs: ${programs.length}</p>
+          </div>` +
+          sports.map(p => `
+            <div class="program sports">
+              <h3>${p.title}</h3>
+              <p>${p.desc || 'No description'}</p>
+              <small>
+                ${p.category ? `Category: ${p.category} | ` : ''}
+                Time: ${p.start_fmt} - ${p.stop_fmt}
+              </small>
+              <br>
+              <button onclick="featureThis(${channelId}, ${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                ⭐ Feature This
+              </button>
+            </div>
+          `).join('');
+
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('results').innerHTML = 
+          `<div style="color:red">Failed to load: ${error.message}</div>`;
+      }
+    });
+
+    function featureThis(channelId, program) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/admin/featured-sports/add';
+
+      const fields = {
+        channel_id: channelId,
+        event_title: program.title,
+        event_description: program.desc || '',
+        start_time: program.start,
+        end_time: program.stop || '',
+        category: program.category || 'Sports',
+        is_active: 'on'
+      };
+
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+</body>
+</html>

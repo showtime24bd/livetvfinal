@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c14">
+  <title>Add Channel — StreamZone Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-page">
+
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><polygon points="10,8 16,11 10,14" fill="white"/></svg>
+      </div>
+      <h2>StreamZone</h2>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_dashboard') }}">← Dashboard</a>
+      <a href="{{ url_for('admin_logout') }}" style="color:#fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+    <div class="form-container">
+      <h1>Add New Channel</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('admin_add_channel') }}" id="addChannelForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label for="name">Channel Name *</label>
+          <input type="text" id="name" name="name" required placeholder="e.g., GTV, Somoy TV">
+        </div>
+
+        <div class="form-group">
+          <label for="stream_url">Primary Stream URL *</label>
+          <input type="url" id="stream_url" name="stream_url" required placeholder="https://example.com/stream.m3u8">
+          <small>Direct URL to the stream (m3u8, mpd, ts, mp4)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="stream_url_backup">Backup Stream URL</label>
+          <input type="url" id="stream_url_backup" name="stream_url_backup" placeholder="https://backup.example.com/stream.m3u8">
+          <small>Optional: tried automatically if the primary fails. For broad browser support, use an H.264-encoded backup in the same stream format.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="stream_type">Stream Type *</label>
+          <select id="stream_type" name="stream_type" required>
+            <option value="m3u8">M3U8 (HLS) — recommended for live</option>
+            <option value="mpd">MPD (DASH) — adaptive streaming</option>
+            <option value="ts">TS (Transport Stream)</option>
+            <option value="mp4">MP4 — video file</option>
+            <option value="flv">FLV</option>
+          </select>
+          <small>Must match your stream URL format</small>
+        </div>
+
+        <div class="form-group">
+          <label>Multiple Quality Links <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+          <div id="quality-container"></div>
+          <button type="button" class="add-quality-btn" onclick="addQualityField()">➕ Add Quality Option</button>
+          <small>Add 1080p / 720p / 480p variants</small>
+        </div>
+
+        <div class="form-group">
+          <label for="logo_url">Logo URL</label>
+          <input type="url" id="logo_url" name="logo_url" placeholder="https://example.com/logo.png">
+          <small>Optional channel logo image URL</small>
+        </div>
+
+        <div class="form-group">
+          <label for="category_id">Category</label>
+          <select id="category_id" name="category_id">
+            <option value="">Uncategorized</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="3" placeholder="Optional channel description…"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="user_agent">Custom User Agent</label>
+          <input type="text" id="user_agent" name="user_agent" placeholder="Mozilla/5.0 …">
+          <small>Optional: required by some streams</small>
+        </div>
+
+        <div class="form-group">
+          <label for="referer">Custom Referer</label>
+          <input type="url" id="referer" name="referer" placeholder="https://example.com">
+          <small>Optional: required by some streams</small>
+        </div>
+
+        <div class="form-group">
+          <label for="epg_channel_id">EPG Channel ID</label>
+          <input type="text" id="epg_channel_id" name="epg_channel_id" placeholder="e.g., 465010">
+          <small>Optional: EPG ID from <a href="https://epg.pw" target="_blank" style="color:var(--brand);">epg.pw</a> JSON schedule API</small>
+        </div>
+
+        <div class="form-group">
+          <label for="order">Display Order</label>
+          <input type="number" id="order" name="order" value="0" min="0">
+          <small>Lower = appears first (0, 1, 2 …)</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="is_active" checked>
+            <span>Active (visible to users)</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn">✅ Add Channel</button>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let qualityCount = 0;
+
+    function addQualityField() {
+      qualityCount++;
+      const container = document.getElementById('quality-container');
+      const div = document.createElement('div');
+      div.className = 'quality-fields';
+      div.id = 'quality-' + qualityCount;
+      div.innerHTML = `
+        <div class="quality-header">
+          <h4 style="margin:0;font-size:.9rem;">Quality #<span class="quality-number">${qualityCount}</span></h4>
+          <button type="button" class="remove-quality-btn" onclick="removeQualityField('quality-${qualityCount}')">🗑️ Remove</button>
+        </div>
+        <div class="quality-field-group">
+          <div>
+            <label>Label *</label>
+            <input type="text" name="quality_label[]" placeholder="1080p" required>
+          </div>
+          <div>
+            <label>Stream URL *</label>
+            <input type="url" name="quality_url[]" placeholder="https://…" required>
+          </div>
+          <div>
+            <label>Bitrate (kbps)</label>
+            <input type="number" name="quality_bitrate[]" placeholder="5000">
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" name="quality_default[]" value="${qualityCount}">
+            <span>Set as default</span>
+          </label>
+        </div>`;
+      container.appendChild(div);
+      div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function removeQualityField(id) {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .25s'; setTimeout(() => el.remove(), 250); }
+    }
+
+    document.getElementById('addChannelForm').addEventListener('submit', function(e) {
+      const name = document.getElementById('name').value.trim();
+      const url  = document.getElementById('stream_url').value.trim();
+      if (!name || !url) {
+        e.preventDefault();
+        alert('Please fill in Channel Name and Stream URL');
+        return;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Adding…';
+    });
+  </script>
+
+</body>
+</html>

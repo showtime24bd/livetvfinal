@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}About Us — StreamZone{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;margin:4rem auto;padding:0 1.5rem;">
+
+  <!-- Hero -->
+  <div style="text-align:center;margin-bottom:3rem;">
+    <div style="width:72px;height:72px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(59,130,246,.35);">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/>
+        <polygon points="10,8 16,11 10,14" fill="white"/>
+      </svg>
+    </div>
+    <h1 style="font-size:2.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.75rem;">StreamZone</h1>
+    <p style="color:var(--text-2);font-size:1.1rem;max-width:500px;margin:0 auto;">
+      Your free gateway to live TV channels from around the world.
+    </p>
+  </div>
+
+  <!-- Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2.5rem;">
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:.75rem;">📺</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">Live Channels</h3>
+      <p style="font-size:.85rem;color:var(--text-3);">Watch live TV channels from News, Sports, Entertainment and more.</p>
+    </div>
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:.75rem;">⚡</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">Fast & Free</h3>
+      <p style="font-size:.85rem;color:var(--text-3);">No registration required. Completely free to use on any device.</p>
+    </div>
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:.75rem;">📱</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">All Devices</h3>
+      <p style="font-size:.85rem;color:var(--text-3);">Works on mobile, tablet and desktop browsers seamlessly.</p>
+    </div>
+
+  </div>
+
+  <!-- About text -->
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;margin-bottom:2rem;">
+    <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;">What is StreamZone?</h2>
+    <p style="color:var(--text-2);line-height:1.8;font-size:.95rem;">
+      StreamZone is a free live TV streaming website that aggregates publicly available stream links
+      from across the internet. We do not produce, upload, or host any of the video content ourselves.
+      Our platform simply organizes and presents these freely available streams in a clean, easy-to-use interface.
+    </p>
+  </div>
+
+  <!-- Disclaimer box -->
+  <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-left:4px solid #3b82f6;border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;color:#93c5fd;">📋 Disclaimer</h2>
+    <p style="color:var(--text-2);line-height:1.8;font-size:.88rem;">
+      StreamZone does not host or stream any of the channels listed on this website.
+      All streaming links are collected from third-party websites and sources freely available on the internet.
+      We are simply providing a way to stream and all content is the copyright of their respective owners.
+      StreamZone is not responsible for the legality or quality of content streamed through third-party links.
+    </p>
+  </div>
+
+  <!-- Copyright notice -->
+  <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-left:4px solid #ef4444;border-radius:var(--radius-md);padding:1.5rem;margin-bottom:2rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;color:#fca5a5;">⚠️ Copyright Notice</h2>
+    <p style="color:var(--text-2);line-height:1.8;font-size:.88rem;">
+      All content streamed through this website is the copyright of their respective owners and broadcasters.
+      StreamZone respects intellectual property rights. If you believe any content on this website infringes
+      your copyright, please contact us and we will remove it immediately.
+    </p>
+  </div>
+
+  <!-- Contact -->
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.5rem;text-align:center;">
+    <h2 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">Contact Us</h2>
+    <p style="color:var(--text-3);font-size:.88rem;">
+      For copyright removal requests or any inquiries, please reach out to us.
+    </p>
+  </div>
+
+</div>
+{% endblock %}

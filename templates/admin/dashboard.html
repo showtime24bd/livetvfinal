@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c14">
+  <title>Dashboard — StreamZone Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-page">
+
+  <!-- Nav -->
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><polygon points="10,8 16,11 10,14" fill="white"/></svg>
+      </div>
+      <h2>StreamZone</h2>
+      <span style="font-size:.7rem;background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 8px;border-radius:99px;border:1px solid rgba(59,130,246,.2);font-weight:600;">ADMIN</span>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site
+      </a>
+      <a href="{{ url_for('admin_logout') }}" style="color:#fca5a5;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </a>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if not persistent_database_configured %}
+    <div class="alert alert-error" role="alert">
+      This Vercel deployment has no persistent database configured. Changes to channels and events are disabled to prevent data loss.
+      Configure <code>DATABASE_URL</code> in Vercel and redeploy before managing content.
+    </div>
+    {% endif %}
+
+    <header class="dashboard-heading">
+      <div>
+        <p class="dashboard-eyebrow">STREAMZONE / CONTROL ROOM</p>
+        <h1>Admin workspace</h1>
+        <p class="dashboard-subtitle">Welcome back, {{ current_user.username }}. Your channel library and live-event lineup are ready to manage.</p>
+      </div>
+      <div class="dashboard-heading-actions">
+        <span class="system-status"><span></span>Control panel online</span>
+        <a href="{{ url_for('index') }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          Open site
+        </a>
+      </div>
+    </header>
+
+    <nav class="dashboard-jump-nav" aria-label="Dashboard sections">
+      <a href="#channels"><span>01</span> Channels</a>
+      <a href="#sports-events"><span>02</span> Sports events</a>
+      <a href="#categories"><span>03</span> Categories</a>
+    </nav>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card stat-channels">
+        <div class="stat-topline"><span class="stat-mark">CH</span><span class="stat-caption">LIBRARY</span></div>
+        <h3>{{ stats.total_channels }}</h3>
+        <p>Total channels</p>
+      </div>
+      <div class="stat-card stat-active">
+        <div class="stat-topline"><span class="stat-mark">ON</span><span class="stat-caption">HEALTH</span></div>
+        <h3>{{ stats.active_channels }}</h3>
+        <p>Active channels</p>
+      </div>
+      <div class="stat-card stat-categories">
+        <div class="stat-topline"><span class="stat-mark">CA</span><span class="stat-caption">ORGANIZATION</span></div>
+        <h3>{{ stats.total_categories }}</h3>
+        <p>Categories</p>
+      </div>
+      <div class="stat-card stat-sports">
+        <div class="stat-topline"><span class="stat-mark">EV</span><span class="stat-caption">LIVE LINEUP</span></div>
+        <h3>{{ stats.featured_sports }}</h3>
+        <p>Featured sports</p>
+      </div>
+    </div>
+
+    <!-- Channels table -->
+    <div class="admin-section" id="channels">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-index">01 / LIBRARY</span>
+          <h2>Channels</h2>
+          <p>Manage streams, formats, and availability.</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <a href="{{ url_for('admin_add_channel') }}" class="btn btn-primary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Channel
+          </a>
+          <a href="{{ url_for('admin_add_category') }}" class="btn btn-secondary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Category
+          </a>
+        </div>
+      </div>
+
+      <div class="table-tools">
+        <label class="admin-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="channelSearch" type="search" placeholder="Search channels..." aria-label="Search channels">
+        </label>
+        <label class="filter-select">
+          <span>Status</span>
+          <select id="channelStatusFilter" aria-label="Filter channels by status">
+            <option value="all">All channels</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </label>
+        <label class="filter-select page-size-select">
+          <span>Rows</span>
+          <select id="channelPageSize" aria-label="Channels per page">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+        <span class="result-count" id="channelResultCount" aria-live="polite">{{ channels|length }} channels</span>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Logo</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Format</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for channel in channels %}
+            <tr class="filterable-channel" data-status="{{ 'active' if channel.is_active else 'inactive' }}">
+              <td style="color:var(--text-3);">{{ channel.order }}</td>
+              <td>
+                {% if channel.logo_url %}
+                <img src="{{ channel.logo_url }}" alt="{{ channel.name }}" class="channel-logo-small"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+                 <div class="no-logo" style="display:none">📺</div>
+                {% else %}
+                <div class="no-logo">📺</div>
+                {% endif %}
+              </td>
+              <td><strong>{{ channel.name }}</strong></td>
+              <td>
+                {% if channel.category %}
+                <span class="badge">{{ channel.category.name }}</span>
+                {% else %}
+                <span class="badge badge-gray">—</span>
+                {% endif %}
+              </td>
+              <td><span class="badge badge-info">{{ channel.stream_type.upper() }}</span></td>
+              <td>
+                {% if channel.is_active %}
+                <span class="badge badge-success">Active</span>
+                {% else %}
+                <span class="badge badge-danger">Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a href="{{ url_for('admin_edit_channel', channel_id=channel.id) }}"
+                     class="btn btn-sm btn-edit">Edit</a>
+                  <form method="POST" action="{{ url_for('admin_delete_channel', channel_id=channel.id) }}"
+                        style="display:inline;" onsubmit="return confirm('Delete {{ channel.name }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="text-center">No channels yet — add your first one!</td>
+            </tr>
+            {% endfor %}
+            <tr id="channelNoResults" class="filter-empty" hidden>
+              <td colspan="7" class="text-center">No channels match these filters.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination" id="channelPagination" aria-label="Channel pages">
+        <span id="channelPageSummary">Page 1 of 1</span>
+        <div class="pagination-actions">
+          <button type="button" id="channelPrevious" aria-label="Previous channel page">Previous</button>
+          <button type="button" id="channelNext" aria-label="Next channel page">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Featured Sports Events -->
+    <div class="admin-section" id="sports-events">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-index">02 / PROGRAMMING</span>
+          <h2>Featured sports events</h2>
+          <p>Keep the featured live schedule current.</p>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <a href="{{ url_for('admin_browse_sports_epg') }}" class="btn btn-primary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Browse EPG Sports
+          </a>
+          <a href="{{ url_for('admin_add_featured_sports') }}" class="btn btn-secondary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Manually
+          </a>
+        </div>
+      </div>
+
+      <div class="table-tools event-tools">
+        <label class="admin-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="eventSearch" type="search" placeholder="Search events or channels..." aria-label="Search sports events">
+        </label>
+        <label class="filter-select page-size-select">
+          <span>Rows</span>
+          <select id="eventPageSize" aria-label="Events per page">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+        <span class="result-count" id="eventResultCount" aria-live="polite">{{ featured_sports|length }} events</span>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Thumbnail</th>
+              <th>Event</th>
+              <th>Channel</th>
+              <th>Start Time</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in featured_sports %}
+            <tr class="filterable-event">
+              <td>
+                {% if event.thumbnail_url %}
+                <img src="{{ event.thumbnail_url }}" alt="{{ event.event_title }}" 
+                     style="width:80px;height:45px;object-fit:cover;border-radius:4px;"
+                     onerror="this.style.display='none'">
+                {% else %}
+                <div style="width:80px;height:45px;background:#1a1f2e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🏆</div>
+                {% endif %}
+              </td>
+              <td>
+                <strong>{{ event.event_title }}</strong>
+                {% if event.teams_playing %}
+                <br><small style="color:var(--text-3);">{{ event.teams_playing }}</small>
+                {% endif %}
+              </td>
+              <td>
+                <div class="event-channel-list">
+                  {% for channel in event.broadcast_channels %}
+                  <span class="badge">{{ channel.name }}</span>
+                  {% endfor %}
+                </div>
+              </td>
+              <td style="font-size:.85rem;color:var(--text-2);">
+                {{ event.start_time.strftime('%b %d, %Y %H:%M') }}
+              </td>
+              <td>
+                {% if event.category %}
+                <span class="badge badge-info">{{ event.category }}</span>
+                {% else %}
+                <span class="badge badge-gray">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if event.is_active %}
+                <span class="badge badge-success">Active</span>
+                {% else %}
+                <span class="badge badge-danger">Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a href="{{ url_for('admin_edit_featured_sports', event_id=event.id) }}"
+                     class="btn btn-sm btn-edit">Edit</a>
+                  <form method="POST" action="{{ url_for('admin_delete_featured_sports', event_id=event.id) }}"
+                        style="display:inline;" onsubmit="return confirm('Delete {{ event.event_title }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="text-center">No featured sports events yet — browse EPG or add manually!</td>
+            </tr>
+            {% endfor %}
+            <tr id="eventNoResults" class="filter-empty" hidden>
+              <td colspan="7" class="text-center">No events match this search.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination" id="eventPagination" aria-label="Sports event pages">
+        <span id="eventPageSummary">Page 1 of 1</span>
+        <div class="pagination-actions">
+          <button type="button" id="eventPrevious" aria-label="Previous event page">Previous</button>
+          <button type="button" id="eventNext" aria-label="Next event page">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="admin-section" id="categories">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-index">03 / ORGANIZATION</span>
+          <h2>Categories</h2>
+          <p>Keep the channel guide easy to browse.</p>
+        </div>
+        <a href="{{ url_for('admin_add_category') }}" class="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add category
+        </a>
+      </div>
+      <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card">
+          <h4>{{ category.name }}</h4>
+          <p>{{ category.channels|length }} channel{% if category.channels|length != 1 %}s{% endif %}</p>
+          <form method="POST" action="{{ url_for('admin_delete_category', category_id=category.id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('Delete category {{ category.name }}? Channels will be uncategorized.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /admin-container -->
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  <script>
+    // Auto-dismiss alerts
+    document.querySelectorAll('.alert').forEach(a => {
+      setTimeout(() => { a.style.opacity='0'; a.style.transition='opacity .4s'; setTimeout(()=>a.remove(),400); }, 4000);
+    });
+  </script>
+</body>
+</html>

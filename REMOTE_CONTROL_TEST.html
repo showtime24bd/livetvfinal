@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android TV Remote Control Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .test-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .key-display {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .key-display.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+        
+        .key-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .key-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .key-info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .key-info-label {
+            opacity: 0.7;
+        }
+        
+        .key-info-value {
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        
+        .instructions {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #10b981;
+        }
+        
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .instructions li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+        }
+        
+        .key-history {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .key-history h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .history-item {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .clear-button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .clear-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .key-display {
+                font-size: 2rem;
+                min-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Remote Control Tester</h1>
+        <p class="subtitle">Press any key on your Android TV remote to test</p>
+        
+        <div class="test-area">
+            <div class="key-display" id="keyDisplay">
+                Press a key...
+            </div>
+            
+            <div class="key-info" id="keyInfo">
+                <div class="key-info-row">
+                    <span class="key-info-label">Key:</span>
+                    <span class="key-info-value" id="keyValue">-</span>
+                </div>
+                <div class="key-info-row">
+                    <span class="key-info-label">Key Code:</span>
+                    <span class="key-info-value" id="keyCode">-</span>
+                </div>
+                <div class="key-info-row">
+                    <span class="key-info-label">Which:</span>
+                    <span class="key-info-value" id="keyWhich">-</span>
+                </div>
+                <div class="key-info-row">
+                    <span class="key-info-label">Code:</span>
+                    <span class="key-info-value" id="keyCodeValue">-</span>
+                </div>
+                <div class="key-info-row">
+                    <span class="key-info-label">Type:</span>
+                    <span class="key-info-value" id="keyType">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Supported Remote Keys:</h3>
+            <ul>
+                <li><strong>Numbers 0-9:</strong> Direct channel selection</li>
+                <li><strong>Arrow Up/Down:</strong> Previous/Next channel</li>
+                <li><strong>Page Up/Down:</strong> Channel Up/Down</li>
+                <li><strong>Enter/OK:</strong> Open channel list</li>
+                <li><strong>Back/Escape:</strong> Close menu / Exit fullscreen</li>
+                <li><strong>Space/Play:</strong> Play/Pause toggle</li>
+                <li><strong>F:</strong> Fullscreen toggle</li>
+                <li><strong>M:</strong> Mute toggle</li>
+            </ul>
+        </div>
+        
+        <div class="key-history">
+            <h3>📜 Key History:</h3>
+            <div id="historyList"></div>
+            <button class="clear-button" onclick="clearHistory()">Clear History</button>
+        </div>
+    </div>
+    
+    <script>
+        const keyDisplay = document.getElementById('keyDisplay');
+        const keyValue = document.getElementById('keyValue');
+        const keyCode = document.getElementById('keyCode');
+        const keyWhich = document.getElementById('keyWhich');
+        const keyCodeValue = document.getElementById('keyCodeValue');
+        const keyType = document.getElementById('keyType');
+        const historyList = document.getElementById('historyList');
+        
+        let keyHistory = [];
+        
+        // Key name mappings
+        const keyNames = {
+            8: 'Backspace',
+            9: 'Tab',
+            13: 'Enter',
+            27: 'Escape',
+            32: 'Space',
+            33: 'Page Up',
+            34: 'Page Down',
+            37: 'Arrow Left',
+            38: 'Arrow Up',
+            39: 'Arrow Right',
+            40: 'Arrow Down',
+            166: 'Media Previous',
+            167: 'Media Next',
+            179: 'Play/Pause',
+            227: 'Rewind',
+            228: 'Fast Forward'
+        };
+        
+        function getKeyType(keyCode) {
+            if (keyCode >= 48 && keyCode <= 57) return 'Number Key';
+            if (keyCode >= 65 && keyCode <= 90) return 'Letter Key';
+            if (keyCode >= 37 && keyCode <= 40) return 'Arrow Key';
+            if (keyCode === 33 || keyCode === 34) return 'Page Key';
+            if (keyCode >= 166 && keyCode <= 179) return 'Media Key';
+            if (keyCode === 13) return 'Action Key';
+            if (keyCode === 27 || keyCode === 8) return 'Navigation Key';
+            return 'Other';
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            // Update display
+            keyDisplay.textContent = event.key;
+            keyDisplay.classList.add('active');
+            setTimeout(() => keyDisplay.classList.remove('active'), 300);
+            
+            // Update info
+            keyValue.textContent = event.key;
+            keyCode.textContent = event.keyCode;
+            keyWhich.textContent = event.which;
+            keyCodeValue.textContent = event.code;
+            keyType.textContent = getKeyType(event.keyCode);
+            
+            // Add to history
+            const timestamp = new Date().toLocaleTimeString();
+            const keyName = keyNames[event.keyCode] || event.key;
+            
+            keyHistory.unshift({
+                key: keyName,
+                code: event.keyCode,
+                time: timestamp
+            });
+            
+            // Keep only last 10 entries
+            if (keyHistory.length > 10) {
+                keyHistory.pop();
+            }
+            
+            updateHistory();
+            
+            // Log to console
+            console.log('Key pressed:', {
+                key: event.key,
+                keyCode: event.keyCode,
+                which: event.which,
+                code: event.code
+            });
+        });
+        
+        function updateHistory() {
+            historyList.innerHTML = keyHistory.map(item => `
+                <div class="history-item">
+                    <span><strong>${item.key}</strong> (${item.code})</span>
+                    <span>${item.time}</span>
+                </div>
+            `).join('');
+        }
+        
+        function clearHistory() {
+            keyHistory = [];
+            updateHistory();
+            keyDisplay.textContent = 'Press a key...';
+            keyValue.textContent = '-';
+            keyCode.textContent = '-';
+            keyWhich.textContent = '-';
+            keyCodeValue.textContent = '-';
+            keyType.textContent = '-';
+        }
+        
+        // Test message on load
+        console.log('🎮 Remote Control Tester loaded!');
+        console.log('Press any key on your Android TV remote to test...');
+    </script>
+</body>
+</html>

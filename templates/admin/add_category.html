@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c14">
+  <title>Add Category — StreamZone Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-page">
+
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><polygon points="10,8 16,11 10,14" fill="white"/></svg>
+      </div>
+      <h2>StreamZone</h2>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_dashboard') }}">← Dashboard</a>
+      <a href="{{ url_for('admin_logout') }}" style="color:#fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+    <div class="form-container" style="max-width:500px;">
+      <h1>Add Category</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('admin_add_category') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="name">Category Name *</label>
+          <input type="text" id="name" name="name" required
+                 placeholder="e.g., News, Sports, Entertainment" autofocus>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">✅ Add Category</button>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

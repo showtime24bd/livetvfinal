@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}StreamZone — Live TV Channels{% endblock %}
+
+{% block content %}
+
+<!-- ═══ FEATURED SPORTS CAROUSEL ═══ -->
+{% if featured_sports %}
+<section class="featured-sports-carousel-section">
+  <div class="container">
+    <div class="carousel-header">
+      <div class="carousel-title-group">
+        <h2 class="carousel-title">🏆 Live & Upcoming Sports Events</h2>
+        <p class="carousel-subtitle">Watch your favorite matches live</p>
+      </div>
+      {% if featured_sports|length > 6 %}
+      <a href="#all-featured-sports" class="see-more-btn">
+        See All
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+      {% endif %}
+    </div>
+    
+    <div class="carousel-container">
+      <button class="carousel-nav carousel-nav-left" aria-label="Previous">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      
+      <div class="carousel-track-wrapper">
+        <div class="carousel-track" id="sportsCarousel">
+          {% for event in featured_sports[:6] %}
+          <article class="carousel-card" role="link" tabindex="0"
+                   data-watch-url="{{ url_for('watch_channel', channel_id=event.broadcast_channels[0].id, event_id=event.id) }}"
+                   onclick="if (!event.target.closest('a, button')) window.location.assign(this.dataset.watchUrl)"
+                   onkeydown="if (event.key === 'Enter' && event.target === this) window.location.assign(this.dataset.watchUrl)">
+            <div class="carousel-card-thumb">
+              {% if event.thumbnail_url %}
+              <img src="{{ event.thumbnail_url }}" alt="{{ event.event_title }}" loading="lazy" decoding="async">
+              {% else %}
+              <div class="carousel-card-no-img">🏆</div>
+              {% endif %}
+              
+              {% if event.category %}
+              <div class="carousel-badge category">{{ event.category }}</div>
+              {% endif %}
+              
+              {% if event.start_time <= now and (not event.end_time or event.end_time >= now) %}
+              <div class="carousel-badge live">
+                <span class="live-dot"></span> LIVE
+              </div>
+              {% endif %}
+              
+              <div class="carousel-overlay">
+                <div class="play-icon">▶</div>
+              </div>
+            </div>
+            
+            <div class="carousel-card-info">
+              <h3 class="carousel-card-title">
+                <a href="{{ url_for('watch_channel', channel_id=event.broadcast_channels[0].id, event_id=event.id) }}">{{ event.event_title }}</a>
+              </h3>
+              {% if event.teams_playing %}
+              <p class="carousel-card-teams">{{ event.teams_playing }}</p>
+              {% endif %}
+              <div class="carousel-card-meta">
+                <div class="meta-item channel-choice-meta">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  </svg>
+                  <div class="channel-choice-links">
+                    {% for channel in event.broadcast_channels %}
+                    <a href="{{ url_for('watch_channel', channel_id=channel.id, event_id=event.id) }}">{{ channel.name }}</a>{% if not loop.last %}<span>·</span>{% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                <span class="meta-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  {{ event.start_time.strftime('%H:%M') }}
+                </span>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <button class="carousel-nav carousel-nav-right" aria-label="Next">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ ALL FEATURED SPORTS (Expandable Grid) ═══ -->
+{% if featured_sports and featured_sports|length > 6 %}
+<section class="all-featured-sports-section" id="all-featured-sports" style="display: none;">
+  <div class="container">
+    <div class="section-heading">
+      <h2>All Featured Sports Events</h2>
+      <button class="close-all-btn" onclick="document.getElementById('all-featured-sports').style.display='none'; window.scrollTo({top: 0, behavior: 'smooth'});">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Close
+      </button>
+    </div>
+    
+    <div class="featured-sports-grid">
+      {% for event in featured_sports %}
+      <article class="featured-sports-card" role="link" tabindex="0"
+               data-watch-url="{{ url_for('watch_channel', channel_id=event.broadcast_channels[0].id, event_id=event.id) }}"
+               onclick="if (!event.target.closest('a, button')) window.location.assign(this.dataset.watchUrl)"
+               onkeydown="if (event.key === 'Enter' && event.target === this) window.location.assign(this.dataset.watchUrl)">
+        <div class="featured-thumb">
+          {% if event.thumbnail_url %}
+          <img src="{{ event.thumbnail_url }}" alt="{{ event.event_title }}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="featured-no-img" style="display:none">🏆</div>
+          {% else %}
+          <div class="featured-no-img">🏆</div>
+          {% endif %}
+          <div class="featured-overlay">
+            <div class="featured-play-btn">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+          </div>
+          {% if event.category %}
+          <div class="featured-category-badge">{{ event.category }}</div>
+          {% endif %}
+          {% if event.start_time <= now and (not event.end_time or event.end_time >= now) %}
+          <div class="featured-live-badge">
+            <span class="live-dot"></span> LIVE NOW
+          </div>
+          {% endif %}
+        </div>
+        <div class="featured-info">
+          <a class="featured-title" href="{{ url_for('watch_channel', channel_id=event.broadcast_channels[0].id, event_id=event.id) }}">{{ event.event_title }}</a>
+          {% if event.teams_playing %}
+          <div class="featured-teams">{{ event.teams_playing }}</div>
+          {% endif %}
+          {% if event.league_tournament %}
+          <div class="featured-league">{{ event.league_tournament }}</div>
+          {% endif %}
+          <div class="featured-meta">
+            {% for channel in event.broadcast_channels %}
+            <a class="featured-channel" href="{{ url_for('watch_channel', channel_id=channel.id, event_id=event.id) }}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><polygon points="10,8 16,11 10,14" fill="currentColor"/>
+              </svg>
+              {{ channel.name }}
+            </a>
+            {% endfor %}
+            <span class="featured-time">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ event.start_time.strftime('%b %d, %H:%M') }}
+            </span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ CATEGORY FILTER ═══ -->
+<section class="category-section">
+  <div class="container">
+    <div class="category-scroll" role="navigation" aria-label="Filter by category">
+      <a href="{{ url_for('index') }}"
+         class="cat-pill {% if not selected_category %}active{% endif %}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        All
+      </a>
+      {% for category in categories %}
+      <a href="{{ url_for('category_channels', category_id=category.id) }}"
+         class="cat-pill {% if selected_category and selected_category.id == category.id %}active{% endif %}">
+        {{ category.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CHANNELS ═══ -->
+<section class="channels-section">
+  <div class="container">
+
+    <div class="section-heading">
+      <h2>{% if selected_category %}{{ selected_category.name }}{% else %}All Channels{% endif %}</h2>
+      <span class="section-count">{{ channel_page.total }} channel{% if channel_page.total != 1 %}s{% endif %}</span>
+    </div>
+
+    {% if channels %}
+    <!-- Skeleton grid shown briefly before JS reveals real cards -->
+    <div class="channels-grid" id="channelsGrid">
+      {% for channel in channels %}
+      <a href="{{ url_for('watch_channel', channel_id=channel.id) }}"
+         class="channel-card"
+         style="transition-delay: {{ [loop.index0 * 0.035, 0.45]|min }}s">
+        <div class="card-thumb">
+          {% if channel.logo_url %}
+          <img src="{{ channel.logo_url }}" alt="{{ channel.name }}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="card-no-img" style="display:none">📺</div>
+          {% else %}
+          <div class="card-no-img">📺</div>
+          {% endif %}
+          <div class="card-overlay">
+            <div class="play-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+          </div>
+          <div class="card-live-badge">
+            <span class="live-dot"></span> LIVE
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">{{ channel.name }}</div>
+          <div class="card-meta">
+            {% if channel.category %}
+            <span class="card-category">{{ channel.category.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if channel_page.pages > 1 %}
+    <nav class="channels-pagination" aria-label="Channel pages">
+      {% if channel_page.has_prev %}
+        {% if selected_category %}
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('category_channels', category_id=selected_category.id, page=channel_page.prev_num) }}">Previous</a>
+        {% else %}
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('index', page=channel_page.prev_num) }}">Previous</a>
+        {% endif %}
+      {% endif %}
+      <span>Page {{ channel_page.page }} of {{ channel_page.pages }}</span>
+      {% if channel_page.has_next %}
+        {% if selected_category %}
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('category_channels', category_id=selected_category.id, page=channel_page.next_num) }}">Next</a>
+        {% else %}
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('index', page=channel_page.next_num) }}">Next</a>
+        {% endif %}
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📺</div>
+      <h3>No channels yet</h3>
+      <p>{% if selected_category %}No channels in this category.{% else %}Add channels from the admin panel to get started.{% endif %}</p>
+      {% if selected_category %}
+      <a href="{{ url_for('index') }}" class="btn-outline">View All Channels</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================================
+// FEATURED SPORTS CAROUSEL
+// ============================================================
+(function() {
+  const carousel = document.getElementById('sportsCarousel');
+  if (!carousel) return;
+  
+  const cards = carousel.querySelectorAll('.carousel-card');
+  const navLeft = document.querySelector('.carousel-nav-left');
+  const navRight = document.querySelector('.carousel-nav-right');
+  const dotsContainer = document.getElementById('carouselDots');
+  if (!cards.length) return;
+
+  const isMobile = window.innerWidth <= 768;
+  const cardWidth = 320 + 24;
+  let currentIndex = 0;
+  let autoScrollInterval;
+  let isUserInteracting = false;
+
+  function getVisibleCards() {
+    return Math.max(1, Math.floor(carousel.parentElement.offsetWidth / cardWidth));
+  }
+  const visibleCards = getVisibleCards();
+  const totalPages = Math.ceil(cards.length / visibleCards);
+
+  for (let i = 0; i < totalPages; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToPage(i));
+    dotsContainer.appendChild(dot);
+  }
+  const dots = dotsContainer.querySelectorAll('.carousel-dot');
+
+  function updateCarousel(smooth) {
+    const offset = -(currentIndex * cardWidth * visibleCards);
+    carousel.style.transition = smooth ? 'transform 0.4s ease' : 'none';
+    carousel.style.transform = 'translateX(' + offset + 'px)';
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+    if (navLeft) navLeft.style.opacity = currentIndex === 0 ? '0.3' : '1';
+    if (navRight) navRight.style.opacity = currentIndex >= totalPages - 1 ? '0.3' : '1';
+  }
+
+  function goToNext() { currentIndex = currentIndex < totalPages - 1 ? currentIndex + 1 : 0; updateCarousel(true); }
+  function goToPrev() { if (currentIndex > 0) { currentIndex--; updateCarousel(true); } }
+  function goToPage(i) { currentIndex = i; updateCarousel(true); }
+
+  if (navLeft) navLeft.addEventListener('click', () => { goToPrev(); isUserInteracting = true; setTimeout(() => { isUserInteracting = false; }, 8000); });
+  if (navRight) navRight.addEventListener('click', () => { goToNext(); isUserInteracting = true; setTimeout(() => { isUserInteracting = false; }, 8000); });
+
+  // Touch swipe — passive for no lag
+  let touchStartX = 0;
+  carousel.parentElement.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].pageX;
+    isUserInteracting = true;
+  }, { passive: true });
+  carousel.parentElement.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].pageX;
+    if (Math.abs(diff) > 40) { diff > 0 ? goToNext() : goToPrev(); }
+    setTimeout(() => { isUserInteracting = false; }, 3000);
+  }, { passive: true });
+
+  // Desktop drag only (skip on mobile to avoid lag)
+  if (!isMobile) {
+    let isDragging = false, startX = 0;
+    carousel.parentElement.addEventListener('mousedown', (e) => { isDragging = true; startX = e.pageX; isUserInteracting = true; });
+    carousel.parentElement.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const diff = e.pageX - startX;
+      if (Math.abs(diff) > 50) { diff > 0 ? goToPrev() : goToNext(); isDragging = false; }
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; setTimeout(() => { isUserInteracting = false; }, 3000); });
+  }
+
+  // See All button
+  const seeMoreBtn = document.querySelector('.see-more-btn');
+  if (seeMoreBtn) {
+    seeMoreBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const s = document.getElementById('all-featured-sports');
+      if (s) { s.style.display = 'block'; s.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  }
+
+  // Auto-scroll — disabled on mobile to save battery/performance
+  if (!isMobile) {
+    autoScrollInterval = setInterval(() => { if (!isUserInteracting) goToNext(); }, 5000);
+  }
+
+  updateCarousel(false);
+})();
+
+// Scroll to top button
+(function() {
+  const scrollBtn = document.createElement('button');
+  scrollBtn.className = 'scroll-to-top';
+  scrollBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>';
+  scrollBtn.setAttribute('aria-label', 'Scroll to top');
+  document.body.appendChild(scrollBtn);
+  window.addEventListener('scroll', () => scrollBtn.classList.toggle('visible', window.pageYOffset > 300), { passive: true });
+  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
+{% endblock %}

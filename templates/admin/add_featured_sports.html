@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c14">
+  <title>Add Featured Sports Event — StreamZone Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-page">
+
+  <!-- Nav -->
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><polygon points="10,8 16,11 10,14" fill="white"/></svg>
+      </div>
+      <h2>StreamZone</h2>
+      <span style="font-size:.7rem;background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 8px;border-radius:99px;border:1px solid rgba(59,130,246,.2);font-weight:600;">ADMIN</span>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_dashboard') }}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Dashboard
+      </a>
+      <a href="{{ url_for('admin_logout') }}" style="color:#fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+    <div style="margin-bottom:2rem;">
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <h1 style="margin-bottom:2rem;">🏆 Add Featured Sports Event</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="admin-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="event_title">Event Title *</label>
+          <input type="text" id="event_title" name="event_title" required 
+                 placeholder="e.g., Arsenal vs Chelsea">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Broadcast Channels *</label>
+          <div class="channel-picker">
+            <input type="search" class="channel-picker-search" placeholder="Find a channel..." aria-label="Search channels">
+            <div class="channel-picker-options">
+              {% for channel in channels %}
+              <label class="channel-picker-option" data-channel-name="{{ channel.name|lower }}">
+                <input type="checkbox" name="channel_ids" value="{{ channel.id }}" {% if channel.id in selected_channel_ids %}checked{% endif %}>
+                <span>{{ channel.name }}{% if not channel.is_active %} <small>(inactive)</small>{% endif %}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <small>Choose every channel carrying this event. The first selected channel is the default link.</small>
+          <p class="channel-picker-error" hidden>Select at least one channel.</p>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="event_description">Description</label>
+          <textarea id="event_description" name="event_description" rows="3"
+                    placeholder="Brief description of the sports event"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="teams_playing">Teams/Players</label>
+          <input type="text" id="teams_playing" name="teams_playing"
+                 placeholder="e.g., Manchester United vs Liverpool">
+        </div>
+
+        <div class="form-group">
+          <label for="category">Sport Category</label>
+          <input type="text" id="category" name="category"
+                 placeholder="e.g., Football, Cricket, Basketball">
+        </div>
+
+        <div class="form-group">
+          <label for="league_tournament">League/Tournament</label>
+          <input type="text" id="league_tournament" name="league_tournament"
+                 placeholder="e.g., Premier League, IPL, UEFA Champions League">
+        </div>
+
+        <div class="form-group">
+          <label for="thumbnail_url">Thumbnail URL</label>
+          <input type="url" id="thumbnail_url" name="thumbnail_url"
+                 placeholder="https://example.com/image.jpg">
+        </div>
+
+        <div class="form-group">
+          <label for="start_time">Start Time *</label>
+          <input type="datetime-local" id="start_time" name="start_time" required>
+        </div>
+
+        <div class="form-group">
+          <label for="end_time">End Time</label>
+          <input type="datetime-local" id="end_time" name="end_time">
+        </div>
+
+        <div class="form-group">
+          <label for="order">Display Order</label>
+          <input type="number" id="order" name="order" value="0" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="is_active" checked>
+            <span>Active (Show on Homepage)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Featured Event</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

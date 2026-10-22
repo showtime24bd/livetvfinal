@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080c14">
+  <title>Browse Sports EPG — StreamZone Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .epg-browse-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .channel-selector {
+      margin-bottom: 2rem;
+    }
+    .channel-selector select {
+      width: 100%;
+      max-width: 400px;
+      padding: .75rem 1rem;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-1);
+      font-size: .95rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-3);
+    }
+    .epg-programs {
+      display: grid;
+      gap: 1rem;
+    }
+    .epg-program-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 1.25rem;
+      align-items: start;
+      transition: all .2s;
+    }
+    .epg-program-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .epg-program-card.sports-highlight {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, rgba(245,158,11,.05), transparent);
+    }
+    .epg-time {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-3);
+      border-radius: 8px;
+      padding: .75rem;
+      min-width: 120px;
+    }
+    .epg-time-start {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+    .epg-time-date {
+      font-size: .75rem;
+      color: var(--text-3);
+      margin-top: .25rem;
+    }
+    .epg-info h3 {
+      font-size: 1.1rem;
+      margin: 0 0 .5rem 0;
+      color: var(--text-1);
+    }
+    .epg-info p {
+      font-size: .9rem;
+      color: var(--text-2);
+      margin: .25rem 0;
+      line-height: 1.5;
+    }
+    .epg-category {
+      display: inline-block;
+      background: rgba(139, 92, 246, .15);
+      color: #a78bfa;
+      padding: .25rem .75rem;
+      border-radius: 99px;
+      font-size: .8rem;
+      font-weight: 600;
+      margin-top: .5rem;
+    }
+    .epg-category.sports {
+      background: rgba(245, 158, 11, .15);
+      color: #fbbf24;
+    }
+    .epg-actions {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .btn-feature {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      padding: .6rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .btn-feature:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, .3);
+    }
+    .filter-sports {
+      margin-bottom: 1rem;
+    }
+    .filter-sports label {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .9rem;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .filter-sports input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="admin-page">
+
+  <!-- Nav -->
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><polygon points="10,8 16,11 10,14" fill="white"/></svg>
+      </div>
+      <h2>StreamZone</h2>
+      <span style="font-size:.7rem;background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 8px;border-radius:99px;border:1px solid rgba(59,130,246,.2);font-weight:600;">ADMIN</span>
+    </div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_dashboard') }}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Dashboard
+      </a>
+      <a href="{{ url_for('admin_logout') }}" style="color:#fca5a5;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </a>
+    </div>
+  </nav>
+
+  <div class="epg-browse-container">
+    <h1 style="margin-bottom:2rem;font-size:2rem;">
+      🏆 Browse Sports Events from EPG
+    </h1>
+
+    <div class="channel-selector">
+      <label style="display:block;margin-bottom:.5rem;color:var(--text-2);font-weight:500;">Select Channel with EPG:</label>
+      <select id="channelSelect">
+        <option value="">-- Select a channel --</option>
+        {% for channel in channels %}
+        <option value="{{ channel.id }}" data-epg-id="{{ channel.epg_channel_id }}">
+          {{ channel.name }} (EPG ID: {{ channel.epg_channel_id }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-sports">
+      <label>
+        <input type="checkbox" id="filterSports" checked>
+        Show only Sports programs
+      </label>
+    </div>
+
+    <div id="epgLoading" class="loading" style="display:none;">
+      Loading EPG data... ⏳
+    </div>
+
+    <div id="epgPrograms" class="epg-programs"></div>
+  </div>
+
+  <script>
+    const channelSelect = document.getElementById('channelSelect');
+    const epgLoading = document.getElementById('epgLoading');
+    const epgPrograms = document.getElementById('epgPrograms');
+    const filterSports = document.getElementById('filterSports');
+
+    let allPrograms = [];
+    let currentChannelId = null;
+
+    channelSelect.addEventListener('change', async function() {
+      const channelId = this.value;
+      if (!channelId) {
+        epgPrograms.innerHTML = '';
+        return;
+      }
+
+      epgLoading.style.display = 'block';
+      epgPrograms.innerHTML = '';
+
+      try {
+        const response = await fetch(`/api/epg/${channelId}`);
+        const data = await response.json();
+
+        if (data.error) {
+          epgPrograms.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+          epgLoading.style.display = 'none';
+          return;
+        }
+
+        allPrograms = data.all || [];
+        currentChannelId = channelId;
+        renderPrograms();
+
+      } catch (error) {
+        epgPrograms.innerHTML = `<div class="alert alert-error">Failed to load EPG data</div>`;
+      }
+
+      epgLoading.style.display = 'none';
+    });
+
+    filterSports.addEventListener('change', renderPrograms);
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderPrograms() {
+      if (!currentChannelId) return;
+      
+      const channelId = currentChannelId;
+      const channelName = channelSelect.options[channelSelect.selectedIndex].text.split(' (')[0];
+      const showOnlySports = filterSports.checked;
+
+      let programs = allPrograms;
+      if (showOnlySports) {
+        programs = programs.filter(p => {
+          const cat = (p.category || '').toLowerCase();
+          const title = (p.title || '').toLowerCase();
+          return cat.includes('sport') || 
+                 title.includes('football') || title.includes('cricket') || 
+                 title.includes('soccer') || title.includes('basketball') ||
+                 title.includes('tennis') || title.includes('hockey') ||
+                 title.includes('match') || title.includes('league') ||
+                 title.includes('tournament') || title.includes('championship');
+        });
+      }
+
+      if (programs.length === 0) {
+        epgPrograms.innerHTML = '<div class="alert alert-info">No programs found</div>';
+        return;
+      }
+
+      epgPrograms.innerHTML = programs.map((prog, index) => {
+        const startDate = new Date(prog.start);
+        const isSports = (prog.category || '').toLowerCase().includes('sport');
+        const isPast = !prog.is_live && startDate.getTime() <= Date.now();
+        
+        return `
+          <div class="epg-program-card ${isSports ? 'sports-highlight' : ''}" data-index="${index}">
+            <div class="epg-time">
+              <div class="epg-time-start">${prog.start_fmt || startDate.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
+              <div class="epg-time-date">${startDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</div>
+            </div>
+            <div class="epg-info">
+              <h3>${escapeHtml(prog.title)}</h3>
+              ${prog.desc ? `<p>${escapeHtml(prog.desc)}</p>` : ''}
+              ${prog.category ? `<span class="epg-category ${isSports ? 'sports' : ''}">${escapeHtml(prog.category)}</span>` : ''}
+            </div>
+            <div class="epg-actions">
+              <button class="btn-feature" data-channel-id="${channelId}" data-program-index="${index}"
+                      ${isPast ? 'disabled title="Past programs are not shown on the homepage"' : ''}>
+                ${isPast ? 'Past program' : '⭐ Feature on Homepage'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Add click handlers to buttons
+      document.querySelectorAll('.btn-feature').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const programIndex = parseInt(this.dataset.programIndex);
+          const channelId = parseInt(this.dataset.channelId);
+          featureEvent(channelId, programs[programIndex], this);
+        });
+      });
+    }
+
+    function featureEvent(channelId, program, btn) {
+      // Show confirmation
+      if (!confirm(`Feature this event on homepage?\n\n${program.title}\n\nStart: ${program.start_fmt || 'Unknown'}`)) {
+        return;
+      }
+
+      // Show loading
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Adding...';
+      btn.disabled = true;
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '{{ url_for("admin_add_featured_sports") }}';
+
+      const fields = {
+        csrf_token: '{{ csrf_token() }}',
+        channel_id: channelId,
+        event_title: program.title || 'Untitled Event',
+        event_description: program.desc || '',
+        start_time: program.start,
+        end_time: program.stop || '',
+        category: program.category || 'Sports',
+        is_active: 'on',
+        order: 0
+      };
+
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value || '';
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+
+</body>
+</html>
